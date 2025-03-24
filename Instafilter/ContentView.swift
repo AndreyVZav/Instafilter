@@ -1,0 +1,29 @@
+//
+//  ContentView.swift
+//  Instafilter
+//
+//  Created by Андрей Завадский on 24.03.2025.
+//
+
+import SwiftUI
+
+struct ContentView: View {
+    @State private var blurAmount = 0.0
+    var body: some View {
+            VStack {
+                Text("Hello, World!")
+                    .blur(radius: blurAmount)
+
+                Slider(value: $blurAmount, in: 0...20)
+
+                Button("Random Blur") {
+                    blurAmount = Double.random(in: 0...20)
+                }
+            }
+        }
+    }
+
+
+#Preview {
+    ContentView()
+}
