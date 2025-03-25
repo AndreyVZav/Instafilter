@@ -12,11 +12,8 @@ struct ContentView8: View {
     
     var body: some View {
        
-        
-        let example = Image(.example)
-
-        ShareLink(item: example, preview: SharePreview("Singapore Airport", image: example)) {
-            Label("Click to share", systemImage: "airplane")
+        Button("Leave a review") {
+            requestReview()
         }
 
     }
