@@ -7,13 +7,19 @@
 import CoreImage
 import CoreImage.CIFilterBuiltins
 import PhotosUI
+import StoreKit
 import SwiftUI
 
 struct ContentView65: View {
     @State private var processedImage: Image?
     @State private var filterIntensity = 0.5
+    @State private var filterRadius = 10.0 // 🔥 Добавлено: Ползунок для радиуса
     @State private var selectedItem: PhotosPickerItem?
     @State private var currentFilter: CIFilter = CIFilter.sepiaTone()
+    
+    @AppStorage("filterCount") var filterCount = 0
+    @Environment(\.requestReview) var requestReview
+    
     let context = CIContext()
     @State private var showingFilters = false
     
@@ -36,19 +42,29 @@ struct ContentView65: View {
                 
                 Spacer()
                 
-                HStack {
-                    Text("Intensity")
-                    Slider(value: $filterIntensity)
-                        .onChange(of: filterIntensity, applyProcessing)
+                if processedImage != nil { // 🔥 Добавлено: Проверка перед отображением ползунков
+                    VStack {
+                        HStack {
+                            Text("Intensity")
+                            Slider(value: $filterIntensity)
+                                .onChange(of: filterIntensity, applyProcessing)
+                        }
+                        .padding(.vertical)
+                        
+                        
+                    }
                 }
-                .padding(.vertical)
                 
                 HStack {
                     Button("Change Filter", action: changeFilter)
+                        .disabled(processedImage == nil) // 🔥 Добавлено: Блокировка кнопки если
                     
                     Spacer()
                     
-                    // share the picture
+                    if let processedImage {
+                        ShareLink(item: processedImage, preview: SharePreview("Instafilter image", image: processedImage))
+                    }
+                    
                 }
                 .confirmationDialog("Select a filter", isPresented: $showingFilters) {
                     Button("Crystallize") { setFilter(CIFilter.crystallize()) }
@@ -58,6 +74,9 @@ struct ContentView65: View {
                     Button("Sepia Tone") { setFilter(CIFilter.sepiaTone()) }
                     Button("Unsharp Mask") { setFilter(CIFilter.unsharpMask()) }
                     Button("Vignette") { setFilter(CIFilter.vignette()) }
+                    Button("Bloom") { setFilter(CIFilter.bloom()) } // 🔥 Добавлено: Новый фильтр
+                    Button("Color Invert") { setFilter(CIFilter.colorInvert()) } // 🔥 Добавлено: Новый фильтр
+                    Button("Motion Blur") { setFilter(CIFilter.motionBlur()) } // 🔥 Добавлено: Нов
                     Button("Cancel", role: .cancel) { }
                 }
             }
@@ -97,9 +116,14 @@ struct ContentView65: View {
         processedImage = Image(uiImage: uiImage)
     }
     
-    func setFilter(_ filter: CIFilter) {
+    @MainActor func setFilter(_ filter: CIFilter) {
         currentFilter = filter
         loadImage()
+        
+        filterCount += 1
+        if filterCount >= 3 {
+            requestReview()
+        }
     }
     
 }
